@@ -4084,7 +4084,13 @@ This component is typically used in HTTPS scenarios where you don't want to take
 
 <properties>
   <property name="Name" required="No">Descriptive name for this element that is shown in the tree. </property>
-  <property name="Preload" required="Yes">Wether or not to preload Keystore. Setting it to <code>true</code> is usually the best option.</property>
+  <property name="Preload" required="Yes">Wether or not to preload Keystore. Setting it to <code>true</code> is usually the best option.
+     In this case, the two Java system properties <code>javax.net.ssl.keyStore</code> and
+     <code>javax.net.ssl.keyStorePassword</code> must be set before JMeter is started as the preload happens before the
+     execution of the start up thread group. If you want to set these system properties from samplers or pre- or postprocessors,
+     you must use <code>false</code> and make sure that the code setting the properties runs before the samplers making use of the 
+     key store.
+  </property>
   <property name="Variable name holding certificate alias" required="False">Variable name that will contain the alias to use for authentication by client certificate. Variable value will be filled from CSV Data Set for example. In the screenshot, "<code>certificat_ssl</code>" will also be a variable in CSV Data Set. Defaults to <code>clientCertAliasVarName</code></property>
   <property name="Alias Start Index" required="Yes">The index of the first key to use in Keystore, 0-based.</property>
   <property name="Alias End Index" required="Yes">The index of the last key to use in Keystore, 0-based. When using "<code>Variable name holding certificate alias</code>" ensure it is large enough so that all keys are loaded at startup. Default to -1 which means load all.</property>

@@ -72,9 +72,6 @@ public abstract class SSLManager {
     // Have we yet tried to load the truststore?
     private volatile boolean truststoreLoaded=false;
 
-    /** Have the password available */
-    protected String defaultpw = System.getProperty(KEY_STORE_PASSWORD);
-
     private int keystoreAliasStartIndex;
 
     private int keystoreAliasEndIndex;
@@ -138,7 +135,6 @@ public abstract class SSLManager {
                     }
                 } else {
                     log.warn("Keystore file not found, loading empty keystore");
-                    this.defaultpw = ""; // Ensure not null
                     this.keyStore.load(null, "");
                 }
             } catch (Exception e) {
@@ -154,28 +150,37 @@ public abstract class SSLManager {
     }
 
     /*
-     * The password can be defined as a property; this dialogue is provided to allow it
-     * to be entered at run-time.
+     * Obtains the password for the key store from the system property
+     * {@link #KEY_STORE_PASSWORD}. If not set and a GUI is available,
+     * the user is prompted. If not set and no GUI is available, the empty
+     * String is returned as password.
      *
-     * However, this does not gain much, as the dialogue does not (yet) support hidden input ...
-     *
+     * TODO: Change the dialog to support hidden input ...
     */
-    private String getPassword() {
-        String password = this.defaultpw;
+    protected String getPassword() {
+        // First try to get password from system property
+        // We query the system property every time a password is needed to
+        // support use cases where the system property is set from samplers
+        // or pre/post processors. This way we also make sure that the two
+        // system properties for the location of the key store and the password
+        // of the key store are read at the same time (note that getPassword is called
+        // from getKeyStore).
+        String password = System.getProperty(KEY_STORE_PASSWORD);
         if (null == password) {
+            // In case no password was found, try to prompt user
             final GuiPackage guiInstance = GuiPackage.getInstance();
             if (guiInstance != null) {
                 synchronized (this) { // TODO is sync really needed?
-                    this.defaultpw = JOptionPane.showInputDialog(
+                    password = JOptionPane.showInputDialog(
                             guiInstance.getMainFrame(),
                             JMeterUtils.getResString("ssl_pass_prompt"),  // $NON-NLS-1$
                             JMeterUtils.getResString("ssl_pass_title"),  // $NON-NLS-1$
                             JOptionPane.QUESTION_MESSAGE);
-                    System.setProperty(KEY_STORE_PASSWORD, this.defaultpw);
-                    password = this.defaultpw;
+                    System.setProperty(KEY_STORE_PASSWORD, password);
                 }
             } else {
-                log.warn("No password provided, and no GUI present so cannot prompt");
+                log.warn("No keystore password provided, and no GUI present so cannot prompt. Using empty password.");
+                password = "";
             }
         }
         return password;

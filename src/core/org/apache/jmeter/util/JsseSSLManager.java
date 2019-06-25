@@ -212,7 +212,7 @@ public class JsseSSLManager extends SSLManager {
         KeyManagerFactory managerFactory =
             KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
         JmeterKeyStore keys = this.getKeyStore();
-        managerFactory.init(null, defaultpw == null ? new char[]{} : defaultpw.toCharArray());
+        managerFactory.init(null, getPassword().toCharArray());
         KeyManager[] managers = managerFactory.getKeyManagers();
         KeyManager[] newManagers = new KeyManager[managers.length];
 
